@@ -129,7 +129,7 @@ public class NewtonMethod {
             
             Matrix J = jacobian(guess);
             fx = f(guess);
-            J.print(3, 10);
+            //J.print(3, 10);
             //J.lu().getL().print(3, VARIATE_NUM);
             //J.lu().getU().print(3, VARIATE_NUM);
             (new Matrix(fx, VARIATE_NUM)).print(3, 10);
@@ -137,6 +137,7 @@ public class NewtonMethod {
                 d = J.lu().solve(new Matrix(fx, VARIATE_NUM)).getRowPackedCopy();
             }
             else {
+                System.out.println("error");
                 d[0] = 0.0001;
                 d[1] = 0.0001;
                 d[2] = 0.0001;
@@ -188,7 +189,7 @@ public class NewtonMethod {
     public static void main(String[] args) {
         NewtonMethod m = new NewtonMethod();
         
-        double [] guess = {1,2,3};
+        double [] guess = {4,1,-0.3};
         double [] ans;
         
         ans = m.solve(guess);
