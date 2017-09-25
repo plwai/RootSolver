@@ -14,6 +14,7 @@ import Jama.Matrix;
 public class NewtonMethod {
     final private int EQNS_LENGTH = 3;
     final private int VARIATE_NUM = 3;
+    final private int NEGATE = -1;
     
     public NewtonMethod() {
 
@@ -27,6 +28,16 @@ public class NewtonMethod {
         }
         
         return outVal;
+    }
+    
+    public double fO(double[] guess) {
+        double outVal = 0;
+        
+        for(int i = 0; i < VARIATE_NUM; i++) {
+            outVal += valF(guess, i) * valF(guess, i);
+        }
+        
+        return outVal * 0.5;
     }
     
     public double valF(double[] guess, int eqnNum) {
@@ -54,7 +65,7 @@ public class NewtonMethod {
     
     public double derivative(double [] guess, int row, int col) {
         int location = row * VARIATE_NUM + col;
-        double result = -1;
+        double result = 1;
         
         switch(location) {
             case 1:
@@ -106,7 +117,21 @@ public class NewtonMethod {
         
         for(int r = 0; r < EQNS_LENGTH; r++) {
             for(int c = 1; c <= VARIATE_NUM; c++) {
-                matrixJ.set(r, c-1, derivative(guess, r, c));
+                matrixJ.set(r, c-1, (derivative(guess, r, c)));
+                //matrixJ.set(r, c-1, (derivative(guess, r, c) ));
+            }
+        }
+        
+        return matrixJ;
+    }
+    
+    public Matrix jacobianT(double [] guess) {
+        Matrix matrixJ = new Matrix(EQNS_LENGTH, VARIATE_NUM);
+        
+        for(int r = 0; r < EQNS_LENGTH; r++) {
+            for(int c = 1; c <= VARIATE_NUM; c++) {
+                matrixJ.set(r, c-1, (derivative(guess, c-1, r+1)));
+                //matrixJ.set(r, c-1, (derivative(guess, r, c) ));
             }
         }
         
@@ -115,9 +140,11 @@ public class NewtonMethod {
     
     public double[] solve(double [] guess) {
         double [] fx;
-        double [] d = new double[VARIATE_NUM];
+        double [] dgn;
         double [] ans = new double[VARIATE_NUM];
+        double damping = 0.1;
         boolean loop = true;
+        boolean isSingular = false;
         int itr = 0;
         int stop = 0;
         
@@ -128,28 +155,38 @@ public class NewtonMethod {
             System.out.println();
             
             Matrix J = jacobian(guess);
+            Matrix Jt = jacobianT(guess);
             fx = f(guess);
+            
+            
             //J.print(3, 10);
+            //Jt.print(3, 10);
             //J.lu().getL().print(3, VARIATE_NUM);
             //J.lu().getU().print(3, VARIATE_NUM);
-            (new Matrix(fx, VARIATE_NUM)).print(3, 10);
-            if(J.lu().isNonsingular()) {
-                d = J.lu().solve(new Matrix(fx, VARIATE_NUM)).getRowPackedCopy();
-            }
-            else {
-                System.out.println("error");
-                d[0] = 0.0001;
-                d[1] = 0.0001;
-                d[2] = 0.0001;
-            }
+            //(new Matrix(fx, VARIATE_NUM)).print(3, 10);
             
 
+            //dgn = (Jt.times(J).plus(Matrix.identity(EQNS_LENGTH, VARIATE_NUM).times(damping))).lu()
+            //            .solve(Jt.times(-1).times(new Matrix(fx, VARIATE_NUM))).getRowPackedCopy();
+            
+            if(J.lu().isNonsingular() && !isSingular) {
+                dgn = J.lu().solve((new Matrix(fx, VARIATE_NUM)).times(NEGATE)).getRowPackedCopy();
+                
+            }
+            else {
+                System.out.println("singular");
+                isSingular = true;
+                dgn = (Jt.times(J).plus(Matrix.identity(EQNS_LENGTH, VARIATE_NUM).times(damping))).lu()
+                        .solve(Jt.times(NEGATE).times(new Matrix(fx, VARIATE_NUM))).getRowPackedCopy();
+
+            }
+
             for(int i = 0; i < VARIATE_NUM; i++) {
-                ans[i] = d[i] + guess[i];
+                ans[i] = dgn[i] + guess[i];
             }
             
             for(int i = 0; i < VARIATE_NUM; i++) {
-                if(Math.abs(d[i]) < 0.000001) {
+                if(Math.abs(dgn[i]) < 0.000000001) {
                     loop = false;
                 }
                 else {
@@ -157,11 +194,12 @@ public class NewtonMethod {
                     break;
                 }
             }
+
             
-            /*System.out.println(d[0]);
-            System.out.println(d[1]);
-            System.out.println(d[2]);
-            System.out.println();*/
+            System.out.println(dgn[0]);
+            System.out.println(dgn[1]);
+            System.out.println(dgn[2]);
+            System.out.println();
             
             
             guess = ans.clone();
@@ -182,6 +220,7 @@ public class NewtonMethod {
         }while(loop);
                 
         System.out.println(itr);
+        (new Matrix(fx, VARIATE_NUM)).print(3, 10);
         
         return ans;
     }
@@ -189,7 +228,7 @@ public class NewtonMethod {
     public static void main(String[] args) {
         NewtonMethod m = new NewtonMethod();
         
-        double [] guess = {4,1,-0.3};
+        double [] guess = {1,0.1,0.1};
         double [] ans;
         
         ans = m.solve(guess);
