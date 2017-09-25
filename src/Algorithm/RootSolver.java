@@ -11,10 +11,10 @@ import Jama.Matrix;
  *
  * @author Wai Pai Lee
  */
-public class NewtonMethod {
+public class RootSolver {
     final private int NEGATE = -1;
     
-    public NewtonMethod() {}
+    public RootSolver() {}
     
     /* Solve provided equation that implemented Equation interface
      * @param eqn, Equation class with all required method implemented
