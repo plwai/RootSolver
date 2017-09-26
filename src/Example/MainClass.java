@@ -20,7 +20,7 @@ public class MainClass {
         double [] guess = {1,0.1,0.1};
         double [] ans;
         
-        ans = m.solve(exp, guess, 1);
+        ans = m.solve(exp, guess, 2);
         
         System.out.println(ans[0]);
         System.out.println(ans[1]);

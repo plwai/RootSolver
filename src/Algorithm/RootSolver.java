@@ -16,6 +16,16 @@ public class RootSolver {
     
     public RootSolver() {}
     
+    public double calMagnitudeSq(double [] fx) {
+        double result = 0;
+        
+        for(int i = 0; i < fx.length; i++) {
+            result += (fx[i] * fx[i]);
+        }
+        
+        return result;
+    }
+    
     /* Solve provided equation that implemented Equation interface
      * @param eqn, Equation class with all required method implemented
      * @param guess, starting guess value. 0 is not allowed.
@@ -27,7 +37,10 @@ public class RootSolver {
         double [] fx;
         double [] dgn = new double[eqn.getVariateNum()];
         double [] ans = new double[eqn.getVariateNum()];
-        double damping = 0.1;
+        double damping = 0.01;
+        double [] squareError;
+        double [] error;
+        double preError = 0;
         boolean loop = true;
         boolean isSingular = false;
         int itr = 0;
@@ -69,6 +82,39 @@ public class RootSolver {
             for(int i = 0; i < eqn.getVariateNum(); i++) {
                 ans[i] = dgn[i] + guess[i];
             }
+            
+            error = new Matrix(eqn.getVariateNum(), eqn.getEqnNum()).getRowPackedCopy();
+            
+            Matrix Jd = eqn.jacobian(dgn);
+
+            for(int r = 0; r < eqn.getEqnNum(); r++) {
+                int [] row = {r};
+                
+                squareError = ((Jd.getMatrix(row, 0, J.getColumnDimension() - 1).transpose()
+                        .times(Jd.getMatrix(row, 0, J.getColumnDimension() - 1)))
+                        .minus((new Matrix(fx, eqn.getVariateNum())).times(-2)
+                        .times(Jd.getMatrix(row, 0, J.getColumnDimension() - 1))))
+                        .plus(Matrix.identity(eqn.getEqnNum(), eqn.getVariateNum()).times(calMagnitudeSq(guess)))
+                        .getRowPackedCopy();
+                        
+                error = (new Matrix(squareError, eqn.getVariateNum()))
+                        .plus(new Matrix(error, eqn.getVariateNum()))
+                        .getRowPackedCopy();
+            }
+            
+            error = (new Matrix(error, eqn.getVariateNum())).times(1.0/eqn.getVariateNum()).getColumnPackedCopy();
+            
+            System.out.println(Math.abs(preError - calMagnitudeSq(error)));
+            System.out.println();
+            
+            if(Math.abs(preError - calMagnitudeSq(error)) < 10) {
+                damping = 1.0;
+            }
+            else {
+                damping = 0.01;
+            }
+            
+            preError = calMagnitudeSq(error);
             
             for(int i = 0; i < eqn.getVariateNum(); i++) {
                 if(Math.abs(dgn[i]) < 0.000000001) {
