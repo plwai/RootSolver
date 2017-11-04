@@ -48,7 +48,7 @@ public class RootSolver {
         
         do {
             Matrix J = eqn.jacobian(guess);
-            Matrix Jt = eqn.jacobianT(guess);
+            Matrix Jt = J.transpose();
             fx = eqn.f(guess);
             
             switch(algo) {
