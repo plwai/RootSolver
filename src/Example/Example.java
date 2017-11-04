@@ -121,19 +121,6 @@ public class Example implements Equations {
     }
     
     @Override
-    public Matrix jacobianT(double [] guess) {
-        Matrix matrixJ = new Matrix(EQNS_LENGTH, VARIATE_NUM);
-        
-        for(int r = 0; r < EQNS_LENGTH; r++) {
-            for(int c = 1; c <= VARIATE_NUM; c++) {
-                matrixJ.set(r, c-1, (derivative(guess, c-1, r+1)));
-            }
-        }
-        
-        return matrixJ;
-    }
-    
-    @Override
     public int getEqnNum() {
         return EQNS_LENGTH;
     }
