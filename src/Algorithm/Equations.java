@@ -16,7 +16,6 @@ public interface Equations {
     public double valF(double[] guess, int eqnNum);
     public double derivative(double [] guess, int row, int col);
     public Matrix jacobian(double [] guess);
-    public Matrix jacobianT(double [] guess);
     public int getEqnNum();
     public int getVariateNum();
 }
